@@ -74,7 +74,7 @@
 
         <!-- Hero Section --><section id="hero" class="bg-white p-8 rounded-xl shadow-lg mb-12 flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-12">
             <div class="flex-shrink-0">
-                <!-- Profile Image --><img src="https://github.com/ElisaBeta-Girgenti/Mywebsite/blob/main/profile.png" alt="Elisabeta Girgenti Profile" class="w-32 h-32 rounded-full object-cover border-4 border-blue-600 shadow-xl">
+                <!-- Profile Image --><img src="profile.png" alt="Elisabeta Girgenti Profile" class="w-32 h-32 rounded-full object-cover border-4 border-blue-600 shadow-xl">
             </div>
             <div class="text-center md:text-left">
                 <p class="text-sm font-semibold text-blue-600 uppercase mb-1">PROACTIVE & RESULTS-DRIVEN</p>
@@ -212,7 +212,7 @@
     
     <div class="relative pt-[75%] md:pt-[56.25%] overflow-hidden rounded-lg shadow-xl border-2 border-gray-300">
         <iframe 
-            src="https://docs.google.com/spreadsheets/d/1oGkEFKGzR1IT9OoWvNYBZMf2NS8DyIClNtUFfE2nedA/edit?gid=0#gid=0" 
+            src="https://docs.google.com/spreadsheets/d/1U44iY8_eLAJNrhXq3criWiEVx-FrTAG0/edit?gid=729800960#gid=729800960" 
             class="absolute top-0 left-0 w-full h-full" 
             frameborder="0" 
             allowfullscreen="true" 
@@ -527,6 +527,103 @@ window.addEventListener('load', () => {
         filterAccounts(); 
     }
 });
+// --- Interactive Tool 3: Process Mapping Builder Logic ---
+const steps = document.querySelectorAll('.draggable-step');
+const dropZone = document.getElementById('drop-zone');
+const totalTimeDisplay = document.getElementById('total-time');
+const resultsDisplay = document.getElementById('results-display');
+const savingsMessage = document.getElementById('savings-message');
+
+let currentSequence = []; // Tracks the order of clicked steps
+let totalTime = 0;
+const OPTIMAL_TIME = 50; // A(30) + C(5) + D(15) = 50 min
+const MANUAL_TIME = 135; // A(30) + B(90) + D(15) = 135 min (The worst path)
+
+// Function to handle step click (simulates drag/drop sequencing)
+function handleStepClick(event) {
+    const stepElement = event.currentTarget;
+    const stepId = stepElement.id;
+
+    // Prevent re-adding the same step
+    if (currentSequence.includes(stepId)) return;
+
+    // Get step data
+    const stepTime = parseInt(stepElement.getAttribute('data-time'));
+    const stepLabel = stepElement.getAttribute('data-label');
+    
+    // Add to sequence and update UI
+    currentSequence.push(stepId);
+    totalTime += stepTime;
+    
+    // Create the visual chip in the drop zone
+    const chip = document.createElement('div');
+    chip.className = 'p-2 rounded-full font-medium text-sm text-white shadow-md transition';
+    chip.style.backgroundColor = stepElement.style.borderLeftColor; // Use border color for chip color
+    chip.textContent = `${currentSequence.length}. ${stepLabel} (${stepTime} min)`;
+    dropZone.appendChild(chip);
+
+    // Update results
+    updateResults();
+}
+
+// Function to update the time and show messages
+function updateResults() {
+    totalTimeDisplay.textContent = totalTime;
+    resultsDisplay.classList.remove('hidden');
+
+    // Logic to calculate savings message
+    let message = "";
+    
+    // Check if the optimal automation step was included (step-C)
+    const usedAutomation = currentSequence.includes('step-C');
+    // Check if the inefficient manual step was avoided (step-B)
+    const avoidedManual = !currentSequence.includes('step-B');
+    
+    // 1. All steps used (for a clear comparison)
+    if (currentSequence.length === steps.length) {
+        if (usedAutomation && avoidedManual && totalTime === OPTIMAL_TIME) {
+            const savings = MANUAL_TIME - OPTIMAL_TIME;
+            message = `🎉 **OPTIMAL PATH!** You bypassed manual data entry. You saved ${savings} minutes per transaction!`;
+            savingsMessage.className = 'text-lg font-medium text-green-700';
+        } else if (currentSequence.includes('step-B') && totalTime === MANUAL_TIME) {
+            message = `⚠️ **MANUAL PATH.** This process took ${MANUAL_TIME} minutes. Automation (Step 3) could save you ${MANUAL_TIME - OPTIMAL_TIME} minutes.`;
+            savingsMessage.className = 'text-lg font-medium text-red-700';
+        } else {
+             message = "Sequence complete. See your total time above.";
+             savingsMessage.className = 'text-lg font-medium text-gray-700';
+        }
+    } else {
+        // Placeholder message while sequencing
+        message = "Keep clicking the remaining steps to build the full workflow...";
+        savingsMessage.className = 'text-lg font-medium text-blue-700';
+    }
+
+    savingsMessage.innerHTML = message;
+}
+
+// Function to reset the demo
+function resetDemo() {
+    currentSequence = [];
+    totalTime = 0;
+    dropZone.innerHTML = '<p class="text-gray-500 font-semibold text-center w-full mt-8">Drag and drop the steps here in sequence (A $\rightarrow$ B $\rightarrow$ C $\rightarrow$ D)</p>';
+    totalTimeDisplay.textContent = '0';
+    resultsDisplay.classList.add('hidden');
+    // Re-enable clicks
+    steps.forEach(step => step.addEventListener('click', handleStepClick));
+}
+
+
+// Event Listeners Initialization
+steps.forEach(step => {
+    step.addEventListener('click', handleStepClick);
+});
+
+// Add a reset button (good practice for interactive demos)
+const resetButton = document.createElement('button');
+resetButton.textContent = 'Reset Workflow';
+resetButton.className = 'mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition';
+resetButton.onclick = resetDemo;
+dropZone.insertAdjacentElement('afterend', resetButton); // Place after the drop zone
 
     </script>
 </body>
