@@ -168,6 +168,62 @@
             </div>
         </section>
 
+        <!--Tools section--> <section>
+<div id="ar-filter-demo" class="mt-8 p-6 bg-white rounded-lg border border-blue-200 shadow-md">
+    <h3 class="text-xl font-bold text-blue-700 mb-4 flex items-center">
+        <i data-lucide="filter" class="w-5 h-5 mr-2"></i> Demo: Dynamic AR Dunning Report Filter
+    </h3>
+    <p class="text-sm text-gray-600 mb-4">
+        Simulate how my SQL logic segments overdue accounts instantly. Select a status to run the 'query' and filter the list.
+    </p>
+
+    <div class="flex items-center space-x-3 mb-4">
+        <label for="statusFilter" class="font-semibold text-gray-800">Filter Status:</label>
+        <select id="statusFilter" onchange="filterAccounts()" class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition cursor-pointer">
+            <option value="All">All Accounts</option>
+            <option value="Overdue (30+)">Overdue (30+ Days)</option>
+            <option value="Overdue (1-29)">Overdue (1-29 Days)</option>
+            <option value="Current">Current</option>
+        </select>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-blue-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Due</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dunning Status</th>
+                </tr>
+            </thead>
+            <tbody id="arTableBody" class="bg-white divide-y divide-gray-200">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<section id="sheets-demo" class="bg-white p-8 rounded-xl shadow-lg mb-12 animate-on-scroll">
+    <h2 class="text-3xl font-bold section-header text-gray-900 flex items-center">
+        <i data-lucide="table-2" class="w-6 h-6 mr-3 text-blue-600"></i> Live Demo: Procurement Reconciliation Dashboard
+    </h2>
+    <p class="text-lg text-gray-700 mb-6">
+        This is a live, embedded preview of a complex Google Sheet dashboard, similar to the one I built to ensure 95% billing accuracy. Try changing the input value in the top yellow cell to see how the reconciliation status updates in real-time.
+    </p>
+    
+    <div class="relative pt-[75%] md:pt-[56.25%] overflow-hidden rounded-lg shadow-xl border-2 border-gray-300">
+        <iframe 
+            src="https://docs.google.com/spreadsheets/d/1oGkEFKGzR1IT9OoWvNYBZMf2NS8DyIClNtUFfE2nedA/edit?gid=0#gid=0" 
+            class="absolute top-0 left-0 w-full h-full" 
+            frameborder="0" 
+            allowfullscreen="true" 
+            mozallowfullscreen="true" 
+            webkitallowfullscreen="true">
+        </iframe>
+    </div>
+</section>
+
+        </section>
+
         <!-- Technical Edge & Interactivity Section (Updated) --><section id="technical-edge" class="bg-white p-8 rounded-xl shadow-lg mb-12 animate-on-scroll">
             <h2 class="3xl font-bold section-header text-gray-900 flex items-center">
                 <i data-lucide="zap" class="w-6 h-6 mr-3 text-blue-600"></i> Technical Edge: Data Visualization & Automation Tools
@@ -404,8 +460,74 @@
             
             savingsResultDiv.classList.remove('hidden');
         }
+        // --- Interactive Tool: AR Status Filter Logic ---
+const accountData = [
+    { id: 'AC001', amount: 1250.50, status: 'Overdue (30+)' },
+    { id: 'AC002', amount: 320.00, status: 'Current' },
+    { id: 'AC003', amount: 5500.00, status: 'Overdue (30+)' },
+    { id: 'AC004', amount: 150.75, status: 'Overdue (1-29)' },
+    { id: 'AC005', amount: 980.25, status: 'Current' },
+    { id: 'AC006', amount: 210.00, status: 'Overdue (1-29)' },
+    { id: 'AC007', amount: 750.00, status: 'Current' }
+];
+
+function renderTable(data) {
+    const tableBody = document.getElementById('arTableBody');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    data.forEach(account => {
+        const row = tableBody.insertRow();
+        
+        // Define status color for visual feedback
+        let statusClass = 'text-gray-800';
+        if (account.status.includes('Overdue (30+)')) {
+            statusClass = 'font-bold text-red-600';
+        } else if (account.status.includes('Overdue (1-29)')) {
+            statusClass = 'text-orange-500';
+        } else if (account.status === 'Current') {
+            statusClass = 'text-green-600';
+        }
+
+        // Cell 1: Account ID
+        let cell1 = row.insertCell();
+        cell1.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
+        cell1.textContent = account.id;
+
+        // Cell 2: Amount Due (formatted currency)
+        let cell2 = row.insertCell();
+        cell2.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-700';
+        cell2.textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(account.amount);
+
+        // Cell 3: Dunning Status (with color)
+        let cell3 = row.insertCell();
+        cell3.className = `px-6 py-4 whitespace-nowrap text-sm ${statusClass}`;
+        cell3.textContent = account.status;
+    });
+}
+
+function filterAccounts() {
+    const filterValue = document.getElementById('statusFilter').value;
+    let filteredData;
+
+    if (filterValue === 'All') {
+        filteredData = accountData;
+    } else {
+        // This acts as the 'WHERE status = [value]' part of the SQL query
+        filteredData = accountData.filter(account => account.status === filterValue);
+    }
+    
+    // Rerender the table with the filtered results
+    renderTable(filteredData);
+}
+
+// Initial load: render all accounts
+window.addEventListener('load', () => {
+    // Only run if the element exists (prevents errors if you move the HTML later)
+    if (document.getElementById('ar-filter-demo')) {
+        filterAccounts(); 
+    }
+});
 
     </script>
 </body>
 </html>
-
